@@ -1,0 +1,16 @@
+domain: health_authorization
+description: Demonstração sintética; não realiza decisão clínica
+required_fields:
+  - beneficiario
+  - carteira
+  - procedimento
+  - medico
+  - crm
+risk:
+  urgent_terms: [urgente, emergência, alto custo]
+  human_review_threshold: 0.25
+tools:
+  - validate_case
+  - check_eligibility
+  - request_information
+  - register_decision

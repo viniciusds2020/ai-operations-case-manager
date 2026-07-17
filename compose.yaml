@@ -1,0 +1,6 @@
+services:
+  case-manager:
+    build: .
+    ports: ["8000:8000"]
+    volumes: ["./data:/app/data"]
+    env_file: [.env]
