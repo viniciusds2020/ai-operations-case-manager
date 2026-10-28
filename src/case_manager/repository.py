@@ -39,6 +39,24 @@ class Repository:
                 (case.model_dump_json(), case.id),
             )
 
+    def transition_with_event(self, case: Case, expected_status: str, event: Event):
+        """Atomically update state and audit trail with optimistic state checking."""
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT payload FROM cases WHERE id = ?", (case.id,)).fetchone()
+            if row is None or Case.model_validate_json(row["payload"]).status != expected_status:
+                raise ValueError("Case status changed; reload before transition.")
+            db.execute(
+                "UPDATE cases SET payload = ? WHERE id = ?",
+                (case.model_dump_json(), case.id),
+            )
+            db.execute(
+                """INSERT INTO events(case_id, event_type, actor, detail, created_at)
+                VALUES (?, ?, ?, ?, ?)""",
+                (event.case_id, event.event_type, event.actor, event.detail, event.created_at),
+            )
+            db.commit()
+
     def get_case(self, case_id: str) -> Case | None:
         with self.connect() as db:
             row = db.execute("SELECT payload FROM cases WHERE id = ?", (case_id,)).fetchone()
