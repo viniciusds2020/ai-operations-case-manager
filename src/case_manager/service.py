@@ -67,7 +67,9 @@ class CaseService:
         previous_status = case.status
         case.status = "approved" if decision == "approve" else "rejected"
         case.updated_at = now()
-        self.repository.transition_with_event(case, previous_status, Event(\n            case_id=case.id, event_type=f"case_{case.status}", actor=actor,\n            detail=reason, created_at=now()))
+        self.repository.transition_with_event(case, previous_status, Event(
+            case_id=case.id, event_type=f"case_{case.status}", actor=actor,
+            detail=reason, created_at=now()))
         return case
 
     def execute(self, case: Case, actor: str) -> Case:
@@ -78,7 +80,9 @@ class CaseService:
         previous_status = case.status
         case.status = "executed"
         case.updated_at = now()
-        self.repository.transition_with_event(case, previous_status, Event(\n            case_id=case.id, event_type="plan_executed", actor=actor,\n            detail="Ferramentas executadas em modo simulado", created_at=now()))
+        self.repository.transition_with_event(case, previous_status, Event(
+            case_id=case.id, event_type="plan_executed", actor=actor,
+            detail="Ferramentas executadas em modo simulado", created_at=now()))
         return case
 
     def _event(self, case_id: str, event_type: str, actor: str, detail: str):
