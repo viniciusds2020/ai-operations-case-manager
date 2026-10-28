@@ -64,10 +64,10 @@ class CaseService:
     def review(self, case: Case, decision: str, actor: str, reason: str) -> Case:
         if case.status != "pending_review":
             raise ValueError("Somente casos pendentes podem ser revisados.")
+        previous_status = case.status
         case.status = "approved" if decision == "approve" else "rejected"
         case.updated_at = now()
-        self.repository.update_case(case)
-        self._event(case.id, f"case_{case.status}", actor, reason)
+        self.repository.transition_with_event(case, previous_status, Event(\n            case_id=case.id, event_type=f"case_{case.status}", actor=actor,\n            detail=reason, created_at=now()))
         return case
 
     def execute(self, case: Case, actor: str) -> Case:
@@ -75,10 +75,10 @@ class CaseService:
             return case
         if case.status not in {"approved", "ready"}:
             raise ValueError("O caso não está autorizado para execução.")
+        previous_status = case.status
         case.status = "executed"
         case.updated_at = now()
-        self.repository.update_case(case)
-        self._event(case.id, "plan_executed", actor, "Ferramentas executadas em modo simulado")
+        self.repository.transition_with_event(case, previous_status, Event(\n            case_id=case.id, event_type="plan_executed", actor=actor,\n            detail="Ferramentas executadas em modo simulado", created_at=now()))
         return case
 
     def _event(self, case_id: str, event_type: str, actor: str, detail: str):
